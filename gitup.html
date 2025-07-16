@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Instrument Manager</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f2f5;
+      padding: 20px;
+      margin: 0;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .left, .right {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      flex: 1;
+      min-width: 300px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    input[type="file"] {
+      padding: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      color: white;
+      font-weight: bold;
+      margin-top: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #addBtn, #updateBtn {
+      background-color: dodgerblue;
+    }
+
+    .product {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .product img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+
+    .product-info {
+      flex: 1;
+    }
+
+    .edit-btn, .delete-btn {
+      padding: 6px 12px;
+      margin-top: 5px;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .edit-btn { background-color: #555; }
+    .delete-btn { background-color: red; }
+
+    .bottom-gallery {
+      margin-top: 40px;
+    }
+
+    .bottom-gallery h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .genres {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .genre-box {
+      text-align: center;
+      width: 150px;
+    }
+
+    .genre-box img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <h2>Instruments</h2>
+      <select id="filterCategory">
+        <option value="all">All Instruments</option>
+        <option value="String">String</option>
+        <option value="Percussion">Percussion</option>
+        <option value="Keyboard">Keyboard</option>
+        <option value="Wind">Wind</option>
+        <option value="Electronic">Electronic</option>
+      </select>
+      <div id="productList"></div>
+    </div>
+
+    <div class="right">
+      <h2>Manage Instrument</h2>
+      <input type="text" id="itemName" placeholder="Instrument Name" />
+      <input type="number" id="itemPrice" placeholder="Price" />
+      <select id="itemCategory">
+        <option value="String">String</option>
+        <option value="Percussion">Percussion</option>
+        <option value="Keyboard">Keyboard</option>
+        <option value="Wind">Wind</option>
+        <option value="Electronic">Electronic</option>
+      </select>
+      <input type="file" id="itemImage" accept="image/*" />
+      <button id="addBtn">Add</button>
+      <button id="updateBtn" disabled>Update</button>
+    </div>
+  </div>
+
+  <!-- Instrument Gallery -->
+  <div class="bottom-gallery">
+    <h2>Explore Popular Instruments</h2>
+    <div class="genres">
+      <div class="genre-box">
+        <h4>Guitar (String)</h4>
+        <img src="https://img.freepik.com/free-photo/headstock-classical-fingerboard-wood-fretboard_1172-289.jpg?semt=ais_hybrid&w=740" alt="Guitar">
+      </div>
+      <div class="genre-box">
+        <h4>Drums (Percussion)</h4>
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnbXXpHz-hSLmLMKQnzipFrZKWCL1BLfNa1A&s" alt="Drums">
+      </div>
+      <div class="genre-box">
+        <h4>Piano (Keyboard)</h4>
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5d9LhJ41HMZIGQnXvFjUWRvPem5NkkvXrGg&s" alt="Piano">
+      </div>
+      <div class="genre-box">
+        <h4>Flute (Wind)</h4>
+        <img src="https://m.media-amazon.com/images/I/51ObFoW55uL.jpg" alt="Flute">
+      </div>
+      <div class="genre-box">
+        <h4>Synthesizer (Electronic)</h4>
+        <img src="https://m.media-amazon.com/images/I/71FEG3GBIAL._UF1000,1000_QL80_.jpg" alt="Synth">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let items = [];
+    let editIndex = null;
+
+    const itemName = document.getElementById("itemName");
+    const itemPrice = document.getElementById("itemPrice");
+    const itemCategory = document.getElementById("itemCategory");
+    const itemImage = document.getElementById("itemImage");
+    const addBtn = document.getElementById("addBtn");
+    const updateBtn = document.getElementById("updateBtn");
+    const productList = document.getElementById("productList");
+    const filterCategory = document.getElementById("filterCategory");
+
+    function render() {
+      const filter = filterCategory.value;
+      productList.innerHTML = "";
+
+      items
+        .filter(i => filter === "all" || i.category === filter)
+        .forEach((i, index) => {
+          const div = document.createElement("div");
+          div.className = "product";
+          div.innerHTML = `
+            <img src="${i.image}" />
+            <div class="product-info">
+              <b>${i.name}</b>
+              Price: ₹${i.price}<br>
+              ${i.category}
+            </div>
+            <button class="edit-btn">Edit</button>
+            <button class="delete-btn">Delete</button>
+          `;
+
+          div.querySelector(".edit-btn").onclick = () => startEdit(index);
+          div.querySelector(".delete-btn").onclick = () => {
+            items.splice(index, 1);
+            render();
+          };
+
+          productList.appendChild(div);
+        });
+    }
+
+    function startEdit(index) {
+      const i = items[index];
+      itemName.value = i.name;
+      itemPrice.value = i.price;
+      itemCategory.value = i.category;
+      editIndex = index;
+      addBtn.disabled = true;
+      updateBtn.disabled = false;
+    }
+
+    addBtn.onclick = () => {
+      const file = itemImage.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const newItem = {
+          name: itemName.value,
+          price: itemPrice.value,
+          category: itemCategory.value,
+          image: e.target.result || 'https://via.placeholder.com/60'
+        };
+        items.push(newItem);
+        clearInputs();
+        render();
+      };
+
+      if (file) {
+        reader.readAsDataURL(file);
+      } else {
+        alert("Please choose an image");
+      }
+    };
+
+    updateBtn.onclick = () => {
+      const file = itemImage.files[0];
+
+      const updateItem = (imageData) => {
+        items[editIndex] = {
+          name: itemName.value,
+          price: itemPrice.value,
+          category: itemCategory.value,
+          image: imageData || items[editIndex].image
+        };
+        clearInputs();
+        render();
+        addBtn.disabled = false;
+        updateBtn.disabled = true;
+        editIndex = null;
+      };
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          updateItem(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        updateItem();
+      }
+    };
+
+    function clearInputs() {
+      itemName.value = "";
+      itemPrice.value = "";
+      itemCategory.value = "String";
+      itemImage.value = "";
+    }
+
+    filterCategory.onchange = render;
+    render();
+  </script>
+</body>
+</html>
